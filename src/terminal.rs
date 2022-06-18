@@ -7,6 +7,9 @@ use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 
+use crate::utils::Vector2 as Vector2;
+
+mod area;
 
 pub struct Terminal {
 
@@ -14,7 +17,9 @@ pub struct Terminal {
 
     start_time : Instant,
     window_draw_timeout: u128,
-    window_last_draw: u128
+    window_last_draw: u128,
+
+    window_size: Vector2
 }
 
 impl Terminal{
@@ -26,11 +31,16 @@ impl Terminal{
 
             window_draw_timeout: 30,
             window_last_draw: 0,
-            start_time : Instant::now()
+            start_time : Instant::now(),
+
+            window_size: Vector2 { x: 0, y: 0 }
         }
     }
 
     pub fn run_terminal(&mut self){
+
+        self.init();
+
         let _stdout = stdout().into_raw_mode().unwrap();
         let (tx,rx) = mpsc::channel();
         let (itx, irx) = mpsc::channel(); // to controll input handler thread
@@ -41,10 +51,7 @@ impl Terminal{
                 loop{
                     // reading control state first
                     let state = irx.try_recv();
-                    match state {
-                        Ok(st) => {if st { break}},
-                        _ => ()
-                    }
+                    if let Ok(st) = state {if st { break}}
 
                     let key_res = key_read();
                     match key_res {
@@ -68,6 +75,21 @@ impl Terminal{
         itx.send(true).expect("Can not terminate input handler"); // exit input handler
     }
 
+    fn init(&mut self){
+        let size = termion::terminal_size();
+        match size {
+            Ok(s) => {
+                self.window_size = Vector2 { x : s.0, y : s.1};
+            }
+            Err(e) => panic!("{}", e)
+        }
+
+        // check if size is valid for playing
+        if self.window_size.lt(Vector2{x:30, y:30}){
+            panic!("Please increase terminal size, your terminal currently has small size");
+        }
+
+    }
 
     fn draw_window(&mut self){
         let cur_time =  self.start_time.elapsed().as_millis();
@@ -79,11 +101,8 @@ impl Terminal{
     }
 
     fn key_process(&mut self, key :Key){
-        match key {
-            Key::Char('q') => {
-                self.exit_app = true
-            },
-            _ => ()
+        if let Key::Char('q') = key {
+            self.exit_app = true
         }
     }
 }
