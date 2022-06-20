@@ -1,4 +1,3 @@
-
 pub struct Vector2{
     pub x: u16,
     pub y: u16
@@ -21,8 +20,4 @@ impl Vector2{
         }
         false
     }
-}
-
-pub struct Area2D{
-
 }

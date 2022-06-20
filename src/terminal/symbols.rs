@@ -1,0 +1,1 @@
+pub const DOT_SYMBOL: char = '•';

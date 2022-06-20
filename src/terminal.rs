@@ -9,7 +9,14 @@ use termion::raw::IntoRawMode;
 
 use crate::utils::Vector2 as Vector2;
 
+mod symbols;
 mod area;
+mod battle_area;
+
+
+struct Zones{
+    battle_area: battle_area::BattleArea
+}
 
 pub struct Terminal {
 
@@ -19,12 +26,20 @@ pub struct Terminal {
     window_draw_timeout: u128,
     window_last_draw: u128,
 
-    window_size: Vector2
+    window_size: Vector2,
+
+    zones: Zones
 }
 
 impl Terminal{
 
     pub fn new() -> Terminal{
+
+        let area = battle_area::BattleArea::new(Vector2{x:2,y:2}); // area of battles, will be displayed from point 2, 2
+
+        let zones = Zones{
+            battle_area: area
+        };
 
         Terminal{
             exit_app: false,
@@ -33,7 +48,8 @@ impl Terminal{
             window_last_draw: 0,
             start_time : Instant::now(),
 
-            window_size: Vector2 { x: 0, y: 0 }
+            window_size: Vector2 { x: 0, y: 0 },
+            zones
         }
     }
 
@@ -96,6 +112,23 @@ impl Terminal{
         if cur_time - self.window_last_draw > self.window_draw_timeout{
             print!("{}", termion::clear::All);
             io::stdout().flush().expect("Can not flush stdout");
+            // drawing operations
+            // iterate through each symbol/pixel. Because this is command line based application, each minimal drawing is equal to one symbol
+            // for more representation let's do it in two loop implementation
+            let mut symbol = ' ';
+            for y in 0..self.window_size.y{
+                for x in 0..self.window_size.x{
+                    // x, y coordinate of elements to be drawn
+                    let point = Vector2{x,y};
+                    // first check battle area
+                    if self.zones.battle_area.area.is_in_area(&point){
+                        symbol = self.zones.battle_area.area.get_symbol(&point);
+                    }
+                    print!("{}",symbol);
+                }
+            }
+            
+            
             self.window_last_draw = cur_time;
         }
     }
