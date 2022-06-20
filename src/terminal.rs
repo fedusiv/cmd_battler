@@ -44,7 +44,7 @@ impl Terminal{
         Terminal{
             exit_app: false,
 
-            window_draw_timeout: 30,
+            window_draw_timeout: 100,
             window_last_draw: 0,
             start_time : Instant::now(),
 
@@ -89,6 +89,8 @@ impl Terminal{
             }
         }
         itx.send(true).expect("Can not terminate input handler"); // exit input handler
+
+        print!("{}", termion::clear::All); // clear after exit
     }
 
     fn init(&mut self){
@@ -110,17 +112,16 @@ impl Terminal{
     fn draw_window(&mut self){
         let cur_time =  self.start_time.elapsed().as_millis();
         if cur_time - self.window_last_draw > self.window_draw_timeout{
-            print!("{}", termion::clear::All);
-            io::stdout().flush().expect("Can not flush stdout");
+            print!("{}{}", termion::clear::All, termion::cursor::Goto(1,1));
             // drawing operations
             // iterate through each symbol/pixel. Because this is command line based application, each minimal drawing is equal to one symbol
             // for more representation let's do it in two loop implementation
-            let mut symbol = ' ';
             for y in 0..self.window_size.y{
                 for x in 0..self.window_size.x{
                     // x, y coordinate of elements to be drawn
                     let point = Vector2{x,y};
                     // first check battle area
+                    let mut symbol = ' ';
                     if self.zones.battle_area.area.is_in_area(&point){
                         symbol = self.zones.battle_area.area.get_symbol(&point);
                     }
@@ -128,7 +129,8 @@ impl Terminal{
                 }
             }
             
-            
+            print!("{}", termion::cursor::Goto(1, 1));
+            io::stdout().flush().expect("Can not flush stdout");
             self.window_last_draw = cur_time;
         }
     }
