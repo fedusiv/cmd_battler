@@ -4,7 +4,20 @@ use crossterm::{
     execute, queue,
     style::{self, Stylize}, cursor, terminal, Result,
     event::{read, poll, Event, KeyCode},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen}
 };
+
+
+pub fn enter(){
+    execute!(stdout(), EnterAlternateScreen).unwrap();
+    terminal::enable_raw_mode().unwrap();
+}
+
+pub fn exit(){
+    clear_terminal();
+    terminal::disable_raw_mode().unwrap();
+    execute!(stdout(), LeaveAlternateScreen).unwrap();
+}
 
 pub fn input_event_read()-> Event{
     loop {

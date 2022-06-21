@@ -7,7 +7,7 @@ use crossterm::event::KeyEvent;
 use crossterm::{
     execute, queue,
     style::{self, Stylize}, cursor, terminal, Result,
-    event::{read, poll, Event, KeyCode},
+    event::{Event, KeyCode},
 };
 
 use crate::utils::Vector2 as Vector2;
@@ -118,13 +118,11 @@ impl Terminal{
         if self.window_size.lt(Vector2{x:30, y:30}){
             panic!("Please increase terminal size, your terminal currently has small size");
         }
-
-        terminal::enable_raw_mode().unwrap();
+        backend::enter();   // making all preparartions for terminal
     }
 
     fn on_close(&self){
-        terminal::disable_raw_mode().unwrap();
-        backend::clear_terminal();
+        backend::exit();    // switching back all terminal stuff
     }
 
     fn draw_window(&mut self){
