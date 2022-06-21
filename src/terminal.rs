@@ -1,17 +1,21 @@
 use std::thread;
 use std::sync::mpsc;
 use std::time::Instant;
-use std::io::{self, stdout, Write};
+use std::io::{ stdout, Write};
 
-use termion::event::Key;
-use termion::input::TermRead;
-use termion::raw::IntoRawMode;
+use crossterm::event::KeyEvent;
+use crossterm::{
+    execute, queue,
+    style::{self, Stylize}, cursor, terminal, Result,
+    event::{read, poll, Event, KeyCode},
+};
 
 use crate::utils::Vector2 as Vector2;
 
 mod symbols;
 mod area;
 mod battle_area;
+mod backend;
 
 
 struct Zones{
@@ -44,7 +48,7 @@ impl Terminal{
         Terminal{
             exit_app: false,
 
-            window_draw_timeout: 100,
+            window_draw_timeout: 1000,
             window_last_draw: 0,
             start_time : Instant::now(),
 
@@ -57,7 +61,6 @@ impl Terminal{
 
         self.init();
 
-        let _stdout = stdout().into_raw_mode().unwrap();
         let (tx,rx) = mpsc::channel();
         let (itx, irx) = mpsc::channel(); // to controll input handler thread
 
@@ -69,18 +72,25 @@ impl Terminal{
                     let state = irx.try_recv();
                     if let Ok(st) = state {if st { break}}
 
-                    let key_res = key_read();
-                    match key_res {
-                        Ok(key) => {tx.send(key).unwrap(); }
-                        _ => ()
-                    }
+                    let input_event = backend::input_event_read();
+                    // match key_res {
+                    //     Ok(key) => {tx.send(key).unwrap(); }
+                    //     _ => ()
+                    // }
+                    {tx.send(input_event).unwrap(); }
                 }
             });
 
         loop{
-            let received = rx.try_recv();
-            match received {
-                Ok(key) => self.key_process(key),
+            let event_received = rx.try_recv();
+            match event_received {
+                Ok(event) => {
+                    match event {
+                        Event::Key(event) => self.key_process(event),
+                        Event::Mouse(_) => todo!(),
+                        Event::Resize(_, _) => todo!(),
+                    }
+                }
                 _ => ()
             }
             self.draw_window();
@@ -88,9 +98,11 @@ impl Terminal{
                 break;
             }
         }
-        itx.send(true).expect("Can not terminate input handler"); // exit input handler
 
-        print!("{}", termion::clear::All); // clear after exit
+
+        itx.send(true).expect("Can not terminate input handler"); // exit input handler
+        self.on_close();
+
     }
 
     fn init(&mut self){
@@ -107,12 +119,19 @@ impl Terminal{
             panic!("Please increase terminal size, your terminal currently has small size");
         }
 
+        terminal::enable_raw_mode().unwrap();
+    }
+
+    fn on_close(&self){
+        terminal::disable_raw_mode().unwrap();
+        backend::clear_terminal();
     }
 
     fn draw_window(&mut self){
         let cur_time =  self.start_time.elapsed().as_millis();
         if cur_time - self.window_last_draw > self.window_draw_timeout{
-            print!("{}{}", termion::clear::All, termion::cursor::Goto(1,1));
+
+            backend::clear_terminal();
             // drawing operations
             // iterate through each symbol/pixel. Because this is command line based application, each minimal drawing is equal to one symbol
             // for more representation let's do it in two loop implementation
@@ -125,28 +144,37 @@ impl Terminal{
                     if self.zones.battle_area.area.is_in_area(&point){
                         symbol = self.zones.battle_area.area.get_symbol(&point);
                     }
-                    print!("{}",symbol);
+                    queue!(stdout(), cursor::MoveTo(x,y), style::PrintStyledContent( symbol.grey())).unwrap();
                 }
             }
+            stdout().flush().unwrap();
             
-            print!("{}", termion::cursor::Goto(1, 1));
-            io::stdout().flush().expect("Can not flush stdout");
             self.window_last_draw = cur_time;
         }
     }
 
-    fn key_process(&mut self, key :Key){
-        if let Key::Char('q') = key {
-            self.exit_app = true
-        }
-    }
-}
-
-
-fn key_read()-> Result<Key, std::io::Error>{
-    loop{
-        if let Some(key) = std::io::stdin().lock().keys().next(){
-            return key;
+    fn key_process(&mut self, key :KeyEvent){
+        // ctrl, alt and shift are parsed as modifiers, need to understand how to use them
+        match key.code{
+            KeyCode::Char('q') => self.exit_app = true,
+            KeyCode::Backspace => todo!(),
+            KeyCode::Enter => todo!(),
+            KeyCode::Left => todo!(),
+            KeyCode::Right => todo!(),
+            KeyCode::Up => todo!(),
+            KeyCode::Down => todo!(),
+            KeyCode::Home => todo!(),
+            KeyCode::End => todo!(),
+            KeyCode::PageUp => todo!(),
+            KeyCode::PageDown => todo!(),
+            KeyCode::Tab => todo!(),
+            KeyCode::BackTab => todo!(),
+            KeyCode::Delete => todo!(),
+            KeyCode::Insert => todo!(),
+            KeyCode::F(_) => todo!(),
+            KeyCode::Null => todo!(),
+            KeyCode::Esc => todo!(),
+            _ => ()
         }
     }
 }

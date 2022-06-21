@@ -7,3 +7,7 @@ edition = "2021"
 
 [dependencies]
 termion = "1"
+
+[dependencies.crossterm]
+version = "0.23"
+features = ["event-stream"] 
