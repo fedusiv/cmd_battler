@@ -1,3 +1,6 @@
+use std::ops::{Add, Sub};
+
+#[derive(Default,Copy, Clone)]
 pub struct Vector2{
     pub x: u16,
     pub y: u16
@@ -19,5 +22,25 @@ impl Vector2{
             return true;
         }
         false
+    }
+}
+
+impl Add for Vector2 {
+    type Output = Self;
+    fn add(self, vector: Self) -> Self::Output {
+        Self{
+            x: self.x + vector.x,
+            y: self.y + vector.y
+        }
+    }
+}
+
+impl Sub for Vector2{
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self{
+            x: self.x - rhs.x,
+            y: self.y - rhs.y
+        }
     }
 }

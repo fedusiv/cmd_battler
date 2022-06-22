@@ -1,21 +1,22 @@
 use crate::utils::Vector2 as Vector2;
-use crate::terminal::symbols as symbols;
-use crate::terminal::area::Area2D as Area2D;
+use crate::terminal::rect::Rect as Rect;
+
+use super::symbols;
 
 
 pub struct BattleArea{
-    pub area: Area2D
+    pub rect: Rect
 }
 
 
 impl BattleArea {
     pub fn new(s_point: Vector2) -> BattleArea{
-        let data = Area2D::new(60, 20, s_point);
+        let data = Rect::new(40, 20, s_point);
 
         let mut area = BattleArea { 
-            area: data
+            rect: data
         };
-        area.area.fill_with_data(symbols::EMPTY_BATLLE_AREA);
+        area.rect.fill_all_cells(symbols::EMPTY_BATTLE_AREA_CELL);
         area
     }
 }
