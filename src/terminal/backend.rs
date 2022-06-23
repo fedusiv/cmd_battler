@@ -9,24 +9,27 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen}
 };
 use super::cell::CellDraw;
+use super::parameters;
 
 
 pub fn enter(){
     execute!(stdout(), EnterAlternateScreen).unwrap();
     terminal::enable_raw_mode().unwrap();
     clear_terminal();
+    execute!(stdout(),cursor::DisableBlinking).unwrap();
 }
 
 pub fn exit(){
     clear_terminal();
     execute!(stdout(), LeaveAlternateScreen).unwrap();
     terminal::disable_raw_mode().unwrap();
+    execute!(stdout(),cursor::EnableBlinking).unwrap();
 }
 
 pub fn input_event_read()-> Event{
     loop {
         // `poll()` waits for an `Event` for a given time period
-        if poll(Duration::from_millis(200)).unwrap() {
+        if poll(Duration::from_millis(parameters::INPUT_POLLING_TIMEOUT)).unwrap() {
             return read().unwrap();
         } 
     }
@@ -35,7 +38,7 @@ pub fn input_event_read()-> Event{
 pub fn clear_terminal() {
     execute!(stdout(),
     cursor::MoveTo(0,0),
-    terminal::Clear(terminal::ClearType::All)).unwrap();
+    terminal::Clear(terminal::ClearType::Purge)).unwrap();
 }
 
 pub fn draw(mut list: LinkedList<CellDraw>) {
