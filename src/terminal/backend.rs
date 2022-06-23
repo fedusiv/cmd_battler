@@ -16,14 +16,16 @@ pub fn enter(){
     execute!(stdout(), EnterAlternateScreen).unwrap();
     terminal::enable_raw_mode().unwrap();
     clear_terminal();
-    execute!(stdout(),cursor::DisableBlinking).unwrap();
+    execute!(stdout(),cursor::DisableBlinking, crossterm::cursor::Hide).unwrap();
 }
 
 pub fn exit(){
     clear_terminal();
     execute!(stdout(), LeaveAlternateScreen).unwrap();
     terminal::disable_raw_mode().unwrap();
-    execute!(stdout(),cursor::EnableBlinking).unwrap();
+    execute!(stdout(),
+    cursor::EnableBlinking,
+    crossterm::cursor::Show).unwrap();
 }
 
 pub fn input_event_read()-> Event{
@@ -43,9 +45,6 @@ pub fn clear_terminal() {
 
 pub fn draw(mut list: LinkedList<CellDraw>) {
 
-    execute!(stdout(),
-        crossterm::cursor::Hide ).unwrap();
-    
 
     loop{
         let cell = list.pop_front();
@@ -61,9 +60,6 @@ pub fn draw(mut list: LinkedList<CellDraw>) {
             _ => break
         }
     }
-
-    execute!(stdout(),
-        crossterm::cursor::Show ).unwrap();
 
     stdout().flush().unwrap();
 

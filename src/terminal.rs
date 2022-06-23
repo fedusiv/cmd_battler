@@ -9,7 +9,7 @@ use crossterm::{
 };
 
 use crate::utils::Vector2 as Vector2;
-
+use self::cursor::Cursor;
 use self::cell::CellDraw;
 
 
@@ -19,6 +19,7 @@ mod battle_area;
 mod backend;
 mod parameters;
 mod symbols;
+mod cursor;
 
 
 struct Zones{
@@ -38,6 +39,7 @@ pub struct Terminal {
 
     buffer: Vec<cell::Cell>,
 
+    cursor: Cursor,
     zones: Zones
 }
 
@@ -61,6 +63,7 @@ impl Terminal{
             terminal_size: Default::default(),
             window_size: Default::default(),
             buffer: vec![cell::Cell::default(); parameters::WINDOW_SIZE_US],
+            cursor: Cursor::default(),
             zones
         }
     }
@@ -71,7 +74,7 @@ impl Terminal{
 
         self.init();
 
-        let (tx,rx) = mpsc::channel();
+        let (tx,rx) = mpsc::channel();  // to send input events
         let (itx, irx) = mpsc::channel(); // to controll input handler thread
 
         // Create additional thread to read inputs from user
@@ -114,6 +117,8 @@ impl Terminal{
         self.on_close();
 
     }
+
+
 
     fn init(&mut self){
         let size = termion::terminal_size();
