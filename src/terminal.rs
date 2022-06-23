@@ -125,7 +125,7 @@ impl Terminal{
         }
 
         // check if size is valid for playing
-        if self.terminal_size.lt(Vector2{x:30, y:30}){
+        if self.terminal_size.lt(parameters::WINDOW_SIZE){
             panic!("Please increase terminal size, your terminal currently has small size");
         }
 

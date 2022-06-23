@@ -1,4 +1,7 @@
 use std::ops::{Add, Sub};
+use crate::terminal::cell::Colour;
+
+use super::terminal::cell::Cell;
 
 #[derive(Default,Copy, Clone)]
 pub struct Vector2{
@@ -6,16 +9,7 @@ pub struct Vector2{
     pub y: u16
 }
 
-
 impl Vector2{
-    // Validate, that current vector is greater or equal
-    pub fn goe(&self, compare: Vector2) -> bool{
-        if compare.x >= self.x && compare.y >= self.y {
-            return true;
-        }
-        false
-    }
-
     // return true if vector is less than given vector
     pub fn lt(&self, compare: Vector2) -> bool{
         if self.x < compare.x || self.y < compare.y {
@@ -42,5 +36,23 @@ impl Sub for Vector2{
             x: self.x - rhs.x,
             y: self.y - rhs.y
         }
+    }
+}
+
+impl PartialEq for Vector2{
+    fn eq(&self, other: &Self) -> bool {
+        if (self.x == other.x) && (self.y == other.y){
+            return true;
+        }
+        false
+    }
+}
+
+
+pub fn create_char_cell(c: char) -> Cell{
+    Cell{
+        content: c,
+        fg: Colour::White,
+        bg: Colour::Black
     }
 }
