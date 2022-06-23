@@ -2,7 +2,6 @@ use std::collections::LinkedList;
 use std::thread;
 use std::sync::mpsc;
 use std::time::Instant;
-use std::io::{ stdout, Write};
 
 use crossterm::event::KeyEvent;
 use crossterm::{
@@ -67,6 +66,8 @@ impl Terminal{
     }
 
     pub fn run_terminal(&mut self){
+
+        backend::init_panic_handler();
 
         self.init();
 

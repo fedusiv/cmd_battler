@@ -1,3 +1,4 @@
+use std::panic;
 use std::collections::LinkedList;
 use std::time::Duration;
 use std::io::{ stdout, Write};
@@ -64,3 +65,17 @@ pub fn draw(mut list: LinkedList<CellDraw>) {
     stdout().flush().unwrap();
 
 }
+
+pub fn init_panic_handler(){
+    panic::set_hook(Box::new(|panic_info| {
+        exit();
+        if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
+            println!("panic occurred: {s:?}");
+        } else {
+            println!("panic occurred");
+        }
+    }));
+}
+
+
+

@@ -1,5 +1,3 @@
-use std::clone;
-
 use crate::utils::Vector2;
 
 #[derive(Clone, Copy, PartialEq, PartialOrd)]
