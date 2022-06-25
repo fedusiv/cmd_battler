@@ -1,4 +1,3 @@
-use std::collections::LinkedList;
 use std::thread;
 use std::sync::mpsc;
 use std::time::Instant;
@@ -9,7 +8,6 @@ use crossterm::{
 };
 
 use crate::utils::Vector2 as Vector2;
-use self::cell::CellDraw;
 use self::view::View;
 
 
@@ -31,9 +29,6 @@ pub struct Terminal {
     window_last_draw: u128,
 
     terminal_size: Vector2, // actual size of open terminal
-    window_size: Vector2,   // size of operatable window, which app uses
-
-    buffer: Vec<cell::Cell>,
 
     view: View
 }
@@ -50,8 +45,7 @@ impl Terminal{
             start_time : Instant::now(),
 
             terminal_size: Default::default(),
-            window_size: Default::default(),
-            buffer: vec![cell::Cell::default(); parameters::WINDOW_SIZE_US],
+
             view: View::create()    // creating view
         }
     }
@@ -122,9 +116,6 @@ impl Terminal{
            panic!("Please increase terminal size, your terminal currently has small size");
         }
 
-        // if terminal size is okay, let's state window size we required.
-        self.window_size = parameters::WINDOW_SIZE;
-
         backend::enter();   // making all preparartions for terminal
 
         // View init stage
@@ -138,31 +129,8 @@ impl Terminal{
     fn draw_window(&mut self){
         let cur_time =  self.start_time.elapsed().as_millis();
         if cur_time - self.window_last_draw > self.window_draw_timeout{
-            // Time is expired and let's make draw
-            // Drawing preparation operations
-            self.view.cursor_apply_cell();   // made changes to cell where cursor takes place
-            // create list with elements, which should be drawn
-            let mut draw_list:LinkedList<cell::CellDraw> = LinkedList::new();
-            // iterate through current buffer of all cell data
-            // if it is not equal, need to draw and save
-            for y in 0..self.window_size.y{ // for representative used two loops as x and y coordinates
-                for x in 0..self.window_size.x{
-                    let current_id = (y * self.window_size.x + x) as usize;
-                    let point = Vector2{x, y};  // curent point
-                    let element = self.buffer[current_id];
-                    // Check does this position need to be redrawn
-                    if let Some(new_cell) = self.view.is_point_need_to_draw(point, element){
-                        self.buffer[current_id] = new_cell.clone();
-                        let cell = CellDraw{
-                            cell: self.buffer[current_id],
-                            point
-                        };
-                        draw_list.push_back(cell);
-                    }
-                    // if point is not in anyzone, definitely we do not need to redraw it
-                }
-            }
-            backend::draw(draw_list);
+            // Time is expired and let's make draw of current frame
+            self.view.draw();
             self.window_last_draw = cur_time;
         }
     }

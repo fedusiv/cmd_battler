@@ -1,6 +1,13 @@
 use crate::utils::Vector2;
 use super::{rect::Rect, symbols};
 
+pub enum CursorMoves {
+    Up,
+    Down,
+    Left,
+    Right
+}
+
 pub enum Zones{
     Area
 }
