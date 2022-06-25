@@ -111,6 +111,13 @@ impl Rect{
     pub fn convert_to_global_coor(&self, point: &mut Vector2){
         *point = *point + self.start_point;
     }
+    // converting position of given point inside rect to position in global rect
+    // position in local coordinates
+    pub fn convert_to_global_coor_return(&self, point: &Vector2)-> Vector2{
+        let pos = *point + self.start_point;
+       pos
+    }
+
 
     // converting position of given position in global coordinates to local coordinates
     pub fn convert_to_local_coordinate(&self, point: &mut Vector2){
@@ -118,24 +125,32 @@ impl Rect{
     }
 
     // position in global coordinates
-    pub fn change_cell_bg(&self, position: Vector2, color: Colour){
+    pub fn change_cell_data(&mut self, position: Vector2, 
+                            content: Option<char>,
+                            fg: Option<Colour>,
+                            bg: Option<Colour>){
         if !self.is_in_area(&position){
             panic!("Trying to change background color of wrong cell in wrong area")
         }
         let mut pos = position;
         self.convert_to_local_coordinate(&mut pos);
         let id = self.get_id_from_pos(pos);
-        self.data[id] = Cell{
-            content: self.data[id].content,
-            fg: symbols::CURSOR.fg,
-            bg: symbols::CURSOR.bg
+        // Change content
+        if let Some(c) = content{
+            self.data[id].content = c;
+        }
+        if let Some(color) = fg{
+            self.data[id].fg = color;
+        }
+        if let Some(color) = bg{
+            self.data[id].bg = color;
         }
 
     }
 
     // calculate id of cell inside data from given local position
     fn get_id_from_pos(&self, pos: Vector2) -> usize{
-        (pos.y * self.size.x + self.size.x )as usize
+        (pos.y * self.size.x + pos.x )as usize
     }
 
 }

@@ -131,13 +131,16 @@ impl Terminal{
 
         // check if size is valid for playing
         if self.terminal_size.lt(parameters::WINDOW_SIZE){
-            panic!("Please increase terminal size, your terminal currently has small size");
+           panic!("Please increase terminal size, your terminal currently has small size");
         }
 
         // if terminal size is okay, let's state window size we required.
         self.window_size = parameters::WINDOW_SIZE;
 
         backend::enter();   // making all preparartions for terminal
+
+        // set cursor to required position
+        self.cursor.position = self.zones.battle_area.get_cursor_pos();
     }
 
     fn on_close(&self){
@@ -147,6 +150,9 @@ impl Terminal{
     fn draw_window(&mut self){
         let cur_time =  self.start_time.elapsed().as_millis();
         if cur_time - self.window_last_draw > self.window_draw_timeout{
+            // Time is expired and let's make draw
+            // Drawing preparation operations
+            self.cursor_apply_cell();   // made changes to cell where cursor takes place
             // create list with elements, which should be drawn
             let mut draw_list:LinkedList<cell::CellDraw> = LinkedList::new();
             // iterate through current buffer of all cell data
@@ -176,6 +182,14 @@ impl Terminal{
             backend::draw(draw_list);
             self.window_last_draw = cur_time;
         }
+    }
+
+    fn cursor_apply_cell(&mut self){
+        let zone = match self.cursor.zone{
+            cursor::Zones::Area => &mut (self.zones.battle_area.rect)
+        };
+        self.cursor.change_cell_view(zone);
+
     }
 
     fn key_process(&mut self, key :KeyEvent){
