@@ -8,19 +8,22 @@ pub struct Rect{
     pub size: Vector2,
     name: String,
     pub start_point: Vector2, // from where start to draw
+    last_cursor_pos: Vector2,    // local postion of point where should be located cursor
 
     pub visible: bool,  // flag represent, that does this area should be drawn (or displayed)
 
     pub data: Vec<Cell>
+
 }
 
 impl Rect{
-    pub fn new(size: Vector2, s_point: Vector2, name: String) -> Rect{
+    pub fn new(size: Vector2, s_point: Vector2, c_point: Vector2, name: String) -> Rect{
         let data = vec![Cell::default(); size.x as usize * size.y as usize];
         let mut rect = Rect{
             size,
             name,
             start_point: s_point,
+            last_cursor_pos: c_point,
             visible: false,
             data
         };
@@ -87,6 +90,7 @@ impl Rect{
     }
 
     // check does given point take place in current area
+    // position in global coordinates
     pub fn is_in_area(&self, point: &Vector2) -> bool{
         // maybe so straight forward check, but ok
         if (point.x >= self.start_point.x) && (point.x < self.start_point.x + self.size.x){
@@ -98,16 +102,21 @@ impl Rect{
         false
     }
 
-    // This function works without verification because expect to be run is_in_area first
-    // point in global coordinates
-    pub fn content_unsafe(&self, point: &Vector2) -> Cell{
-            let area_point = Vector2{y: point.y - self.start_point.y, x: point.x - self.start_point.x};
-            let index = ( self.size.x * area_point.y + area_point.x ) as usize;
-            self.data[index]
+    // get content of required global position
+    pub fn content(&self, point: &Vector2) -> Option<Cell>{
+            if self.is_in_area(point){
+                let local_pos = self.convert_to_local_coordinate_return(point);
+                let id = self.get_id_from_pos(local_pos);
+                Some(self.data[id])
+            }
+            else {
+                None
+            }
     }
 
     // converting position of given point inside rect to position in global rect
     // position in local coordinates
+    #[allow(dead_code)]
     pub fn convert_to_global_coor(&self, point: &mut Vector2){
         *point = *point + self.start_point;
     }
@@ -117,11 +126,14 @@ impl Rect{
         let pos = *point + self.start_point;
        pos
     }
-
-
     // converting position of given position in global coordinates to local coordinates
     pub fn convert_to_local_coordinate(&self, point: &mut Vector2){
         *point = *point - self.start_point;
+    }
+    // converting position of given position in global coordinates to local coordinates
+    pub fn convert_to_local_coordinate_return(&self, point: &Vector2) -> Vector2{
+        let pos = *point - self.start_point;
+        pos
     }
 
     // position in global coordinates
@@ -151,6 +163,12 @@ impl Rect{
     // calculate id of cell inside data from given local position
     fn get_id_from_pos(&self, pos: Vector2) -> usize{
         (pos.y * self.size.x + pos.x )as usize
+    }
+
+    // When cursor moving to other rect, need to get position of starting point for cursor
+    // return position in global coordinates
+    pub fn get_cursor_pos(&self) -> Vector2{
+        self.convert_to_global_coor_return(&self.last_cursor_pos)
     }
 
 }

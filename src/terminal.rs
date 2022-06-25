@@ -9,22 +9,18 @@ use crossterm::{
 };
 
 use crate::utils::Vector2 as Vector2;
-use self::cursor::Cursor;
 use self::cell::CellDraw;
+use self::view::View;
 
 
 pub mod cell;
 mod rect;
-mod battle_area;
 mod backend;
 mod parameters;
 mod symbols;
 mod cursor;
+mod view;
 
-
-struct Zones{
-    battle_area: battle_area::BattleArea
-}
 
 pub struct Terminal {
 
@@ -39,19 +35,12 @@ pub struct Terminal {
 
     buffer: Vec<cell::Cell>,
 
-    cursor: Cursor,
-    zones: Zones
+    view: View
 }
 
 impl Terminal{
 
     pub fn new() -> Terminal{
-
-        let area = battle_area::BattleArea::new(Vector2{x:2,y:2}); // area of battles, will be displayed from point 2, 2
-
-        let zones = Zones{
-            battle_area: area
-        };
 
         Terminal{
             exit_app: false,
@@ -63,8 +52,7 @@ impl Terminal{
             terminal_size: Default::default(),
             window_size: Default::default(),
             buffer: vec![cell::Cell::default(); parameters::WINDOW_SIZE_US],
-            cursor: Cursor::default(),
-            zones
+            view: View::create()    // creating view
         }
     }
 
@@ -139,8 +127,8 @@ impl Terminal{
 
         backend::enter();   // making all preparartions for terminal
 
-        // set cursor to required position
-        self.cursor.position = self.zones.battle_area.get_cursor_pos();
+        // View init stage
+        self.view.init();
     }
 
     fn on_close(&self){
@@ -152,7 +140,7 @@ impl Terminal{
         if cur_time - self.window_last_draw > self.window_draw_timeout{
             // Time is expired and let's make draw
             // Drawing preparation operations
-            self.cursor_apply_cell();   // made changes to cell where cursor takes place
+            self.view.cursor_apply_cell();   // made changes to cell where cursor takes place
             // create list with elements, which should be drawn
             let mut draw_list:LinkedList<cell::CellDraw> = LinkedList::new();
             // iterate through current buffer of all cell data
@@ -160,21 +148,16 @@ impl Terminal{
             for y in 0..self.window_size.y{ // for representative used two loops as x and y coordinates
                 for x in 0..self.window_size.x{
                     let current_id = (y * self.window_size.x + x) as usize;
-                    let mut point = Vector2{x, y};  // curent point
-                    // Battle area
-                    if self.zones.battle_area.rect.is_in_area(&point){
-                        // in this rect
-                        if self.buffer[current_id] != self.zones.battle_area.rect.content_unsafe(&point){
-                            // change value of buffer
-                            self.buffer[current_id] =  self.zones.battle_area.rect.content_unsafe(&point).clone();
-                            // if is not equal need to put it into list for drawing
-                            self.zones.battle_area.rect.convert_to_global_coor(&mut point); // converted to glonal area
-                            let cell = CellDraw{
-                                cell: self.buffer[current_id],
-                                point
-                            };
-                            draw_list.push_back(cell);
-                        }
+                    let point = Vector2{x, y};  // curent point
+                    let element = self.buffer[current_id];
+                    // Check does this position need to be redrawn
+                    if let Some(new_cell) = self.view.is_point_need_to_draw(point, element){
+                        self.buffer[current_id] = new_cell.clone();
+                        let cell = CellDraw{
+                            cell: self.buffer[current_id],
+                            point
+                        };
+                        draw_list.push_back(cell);
                     }
                     // if point is not in anyzone, definitely we do not need to redraw it
                 }
@@ -182,14 +165,6 @@ impl Terminal{
             backend::draw(draw_list);
             self.window_last_draw = cur_time;
         }
-    }
-
-    fn cursor_apply_cell(&mut self){
-        let zone = match self.cursor.zone{
-            cursor::Zones::Area => &mut (self.zones.battle_area.rect)
-        };
-        self.cursor.change_cell_view(zone);
-
     }
 
     fn key_process(&mut self, key :KeyEvent){
