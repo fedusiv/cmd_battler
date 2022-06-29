@@ -7,7 +7,7 @@ use crossterm::event::{Event, KeyCode};
 
 use self::commands::CommandExecutor;
 use self::view::View;
-use crate::utils::Vector2;
+use crate::utils::{Vector2, Vector2Int};
 
 mod backend;
 pub mod cell;
@@ -100,7 +100,10 @@ impl Terminal {
         let size = termion::terminal_size();
         match size {
             Ok(s) => {
-                self.terminal_size = Vector2 { x: s.0, y: s.1 };
+                self.terminal_size = Vector2 {
+                    x: s.0 as Vector2Int,
+                    y: s.1 as Vector2Int,
+                };
             }
             Err(e) => panic!("{}", e),
         }

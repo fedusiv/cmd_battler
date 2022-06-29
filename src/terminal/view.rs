@@ -1,3 +1,4 @@
+use crate::terminal::symbols;
 use crate::utils::Vector2;
 use std::collections::LinkedList;
 
@@ -33,9 +34,13 @@ impl View {
     }
 
     pub fn init(&mut self) {
+        self.area.set_logic_size(Vector2 {
+            x: parameters::BATTLE_AREA_SIZE.x - 2,
+            y: parameters::BATTLE_AREA_SIZE.y - 2,
+        });
         self.cursor.position = self.area.get_cursor_pos();
         // need to init last used content for cursor, basically transfer to cursor pointer to data, from where to take values to return backwards when cursor is moving
-        if let Some(pnt) = self.area.content_pointer(&self.cursor.position) {
+        if let Some(pnt) = self.area.content_pointer_logic(&self.cursor.position) {
             self.cursor.last_content = pnt;
             panic!("No content of cell in view init!");
         }
@@ -57,22 +62,27 @@ impl View {
         cell
     }
 
-    fn get_cursor_view(&self) -> &mut Rect {
-        let mut view = match self.cursor.view {
-            cursor::Zones::Area => self.area,
-        };
-        &mut view
-    }
-
     // Making chages to a cell where cursor is located
-    pub fn cursor_apply_cell(&self) {
+    pub fn cursor_apply_cell(&mut self) {
         // chose current view, where cursor is located
-        let view = self.get_cursor_view();
-        self.cursor.change_cell_view(view);
+        let view = match self.cursor.view {
+            cursor::Zones::Area => &mut self.area,
+        };
+
+        if let Some(cell) = view.content_logic(&self.cursor.position) {
+            if cell.bg == symbols::CURSOR.bg {
+                // cursor already there
+                return;
+            }
+
+            view.change_cell_data(self.cursor.position, None, None, Some(symbols::CURSOR.bg));
+        }
     }
 
     pub fn move_cursor(&mut self, direction: CursorMoves) {
-        let current_view = self.get_cursor_view();
+        let view = match self.cursor.view {
+            cursor::Zones::Area => &self.area,
+        };
         let move_vector = match direction {
             CursorMoves::Up => Vector2 { x: 0, y: 1 },
             CursorMoves::Down => Vector2 { x: 0, y: -1 },
