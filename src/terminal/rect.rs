@@ -25,7 +25,7 @@ impl Rect {
             size,
             name,
             start_point: s_point,
-            last_cursor_pos: c_point,
+            last_cursor_pos: c_point, // logic point
             visible: false,
             data,
             logic_positions,
@@ -99,13 +99,13 @@ impl Rect {
         let mut pos = Vector2 { x: 1, y: 1 }; // starts from first cell from borders
                                               // currently this solution work only for battle area, main area or whatever you can call it
         for row in self.logic_positions.iter_mut() {
-            pos.x = 0;
             for el in row.iter_mut() {
                 el.x = pos.x;
                 el.y = pos.y;
                 pos.x += 1;
             }
             pos.y += 1;
+            pos.x = 1;
         }
     }
 
@@ -125,8 +125,8 @@ impl Rect {
         let y_size = self.logic_positions.len();
         let x_size = self.logic_positions[0].len();
         // maybe so straight forward check, but ok
-        if point.x < x_size as Vector2Int {
-            if point.y < y_size as Vector2Int {
+        if 0 <= point.x && point.x < x_size as Vector2Int {
+            if 0 <= point.y && point.y < y_size as Vector2Int {
                 return true;
             }
         }

@@ -29,7 +29,7 @@ impl View {
         let area = Rect::new(
             parameters::BATTLE_AREA_SIZE,
             Vector2 { x: 2, y: 2 }, // from where to draw this rect in global coordinates
-            Vector2 { x: 1, y: 1 }, // where will be located first cursor position in local coordinates
+            Vector2 { x: 0, y: 0 }, // where will be located first cursor position in logic coordinates
             "Area".to_string(),
         );
         View {
@@ -47,8 +47,8 @@ impl View {
         });
         self.cursor.position = self.area.get_cursor_pos();
         // need to init last used content for cursor, basically transfer to cursor pointer to data, from where to take values to return backwards when cursor is moving
-        if let Some(pnt) = self.area.content_pointer_logic(&self.cursor.position) {
-            self.cursor.last_content = pnt;
+        if let Some(cell) = self.area.content_logic(&self.cursor.position) {
+            self.cursor.last_content = cell;
         } else {
             panic!("No content of cell in view init!");
         }
@@ -82,7 +82,8 @@ impl View {
                 // cursor already there
                 return;
             }
-
+            // if it's not equal so let's anyway store latest changes under cursor
+            self.cursor.last_content.bg = cell.bg;
             view.change_cell_data(self.cursor.position, None, None, Some(symbols::CURSOR.bg));
         }
     }
@@ -95,20 +96,18 @@ impl View {
             CursorMoves::Up => Vector2 { x: 0, y: -1 },
             CursorMoves::Down => Vector2 { x: 0, y: 1 },
             CursorMoves::Left => Vector2 { x: 1, y: 0 },
-            CursorMoves::Right => Vector2 { x: 1, y: 0 },
+            CursorMoves::Right => Vector2 { x: -1, y: 0 },
         };
         let destination = self.cursor.position + move_vector; // distination is logic point
                                                               // check that this point is reachable
         if view.is_in_area_logic(&destination) {
             // destination exist. need to change content of cell to previoes one
-            unsafe {
-                view.change_cell_data(
-                    self.cursor.position,
-                    None,
-                    None,
-                    Some(self.cursor.last_content.as_ref().unwrap().bg),
-                );
-            }
+            view.change_cell_data(
+                self.cursor.position,
+                None,
+                None,
+                Some(self.cursor.last_content.bg),
+            );
             self.cursor.position = destination;
         }
     }
