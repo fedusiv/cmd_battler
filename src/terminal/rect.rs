@@ -174,11 +174,13 @@ impl Rect {
     }
     // converting position of given point inside rect to position in global rect
     // position in local coordinates
+    #[allow(dead_code)]
     pub fn convert_to_global_coor_return(&self, point: &Vector2) -> Vector2 {
         let pos = *point + self.start_point;
         pos
     }
     // converting position of given position in global coordinates to local coordinates
+    #[allow(dead_code)]
     pub fn convert_to_local_coordinate(&self, point: &mut Vector2) {
         *point = *point - self.start_point;
     }
@@ -199,7 +201,7 @@ impl Rect {
         if !self.is_in_area_logic(&position) {
             panic!("Trying to change background color of wrong cell in wrong area")
         }
-        let mut pos = self.logic_positions[position.y as usize][position.x as usize]; // geting local postiino from logic
+        let pos = self.logic_positions[position.y as usize][position.x as usize]; // geting local postiino from logic
         let id = self.get_id_from_pos(pos);
         // Change content
         if let Some(c) = content {

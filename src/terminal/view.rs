@@ -5,10 +5,17 @@ use std::collections::LinkedList;
 use super::{
     backend,
     cell::{Cell, CellDraw},
-    cursor::{self, Cursor, CursorMoves},
+    cursor::{self, Cursor},
     parameters,
     rect::Rect,
 };
+
+pub enum CursorMoves {
+    Up,
+    Down,
+    Left,
+    Right,
+}
 
 pub struct View {
     area: Rect,
@@ -42,6 +49,7 @@ impl View {
         // need to init last used content for cursor, basically transfer to cursor pointer to data, from where to take values to return backwards when cursor is moving
         if let Some(pnt) = self.area.content_pointer_logic(&self.cursor.position) {
             self.cursor.last_content = pnt;
+        } else {
             panic!("No content of cell in view init!");
         }
         self.window_size = parameters::WINDOW_SIZE;
@@ -81,15 +89,28 @@ impl View {
 
     pub fn move_cursor(&mut self, direction: CursorMoves) {
         let view = match self.cursor.view {
-            cursor::Zones::Area => &self.area,
+            cursor::Zones::Area => &mut self.area,
         };
         let move_vector = match direction {
-            CursorMoves::Up => Vector2 { x: 0, y: 1 },
-            CursorMoves::Down => Vector2 { x: 0, y: -1 },
-            CursorMoves::Left => Vector2 { x: -1, y: 0 },
+            CursorMoves::Up => Vector2 { x: 0, y: -1 },
+            CursorMoves::Down => Vector2 { x: 0, y: 1 },
+            CursorMoves::Left => Vector2 { x: 1, y: 0 },
             CursorMoves::Right => Vector2 { x: 1, y: 0 },
         };
-        let destination = self.cursor.position + move_vector;
+        let destination = self.cursor.position + move_vector; // distination is logic point
+                                                              // check that this point is reachable
+        if view.is_in_area_logic(&destination) {
+            // destination exist. need to change content of cell to previoes one
+            unsafe {
+                view.change_cell_data(
+                    self.cursor.position,
+                    None,
+                    None,
+                    Some(self.cursor.last_content.as_ref().unwrap().bg),
+                );
+            }
+            self.cursor.position = destination;
+        }
     }
 
     // Making draw

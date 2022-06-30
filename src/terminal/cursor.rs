@@ -1,14 +1,6 @@
 use super::cell::Cell;
-use super::{rect::Rect, symbols};
 use crate::utils::Vector2;
 use std::ptr;
-
-pub enum CursorMoves {
-    Up,
-    Down,
-    Left,
-    Right,
-}
 
 pub enum Zones {
     Area,

@@ -5,7 +5,7 @@ use std::time::Instant;
 use crossterm::event::KeyEvent;
 use crossterm::event::{Event, KeyCode};
 
-use self::commands::CommandExecutor;
+use self::commands::{CommandExecutor, CommandsOpCode};
 use self::view::View;
 use crate::utils::{Vector2, Vector2Int};
 
@@ -42,7 +42,7 @@ impl Terminal {
 
             terminal_size: Default::default(),
 
-            view: View::create(), // creating view
+            view: View::create(),
             executor: CommandExecutor::create(),
         }
     }
@@ -117,9 +117,6 @@ impl Terminal {
 
         // View init stage
         self.view.init();
-
-        // attach view to the command executor module
-        self.executor.init(&self.view);
     }
 
     fn on_close(&self) {
@@ -140,10 +137,10 @@ impl Terminal {
         match key.code {
             KeyCode::Char('q') => self.exit_app = true,
             // cursor operation
-            KeyCode::Char('o') => self.exit_app = true,
-            KeyCode::Char('l') => self.exit_app = true,
-            KeyCode::Char('k') => self.exit_app = true,
-            KeyCode::Char(';') => self.exit_app = true,
+            KeyCode::Char('o') => self.execute_cmd(CommandsOpCode::move_cursor_up),
+            KeyCode::Char('l') => self.execute_cmd(CommandsOpCode::move_cursor_down),
+            KeyCode::Char(';') => self.execute_cmd(CommandsOpCode::move_cursor_left),
+            KeyCode::Char('k') => self.execute_cmd(CommandsOpCode::move_cursor_right),
             KeyCode::Enter => todo!(),
             KeyCode::Left => todo!(),
             KeyCode::Right => todo!(),
@@ -162,5 +159,9 @@ impl Terminal {
             KeyCode::Esc => todo!(),
             _ => (),
         }
+    }
+
+    fn execute_cmd(&mut self, op_code: CommandsOpCode) {
+        self.executor.execute_cmd(&mut self.view, op_code);
     }
 }
