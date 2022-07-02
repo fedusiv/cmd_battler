@@ -51,26 +51,24 @@ impl From<Colour> for crossterm::style::Color {
     }
 }
 
-pub struct CellDraw{
+pub struct CellDraw {
     pub cell: Cell,
-    pub point: Vector2
+    pub point: Vector2,
 }
 
 #[derive(Copy, Clone, PartialEq, PartialOrd)]
-pub struct Cell{
+pub struct Cell {
     pub content: char,
     pub fg: Colour,
-    pub bg: Colour
+    pub bg: Colour,
 }
 
 impl Default for Cell {
     fn default() -> Cell {
-        Cell { 
+        Cell {
             content: ' ',
-            fg: Colour::Gray, 
-            bg: Colour::Black }
+            fg: Colour::Gray,
+            bg: Colour::Black,
+        }
     }
 }
-
-
-

@@ -5,6 +5,8 @@ use std::time::Instant;
 use crossterm::event::KeyEvent;
 use crossterm::event::{Event, KeyCode};
 
+use crate::core::core::Core;
+
 use self::commands::{CommandExecutor, CommandsOpCode};
 use self::view::View;
 use crate::utils::{Vector2, Vector2Int};
@@ -12,6 +14,7 @@ use crate::utils::{Vector2, Vector2Int};
 mod backend;
 pub mod cell;
 mod commands;
+mod convert_logic;
 mod cursor;
 mod parameters;
 mod rect;
@@ -29,6 +32,8 @@ pub struct Terminal {
 
     view: View,
     executor: CommandExecutor,
+
+    core: Core,
 }
 
 impl Terminal {
@@ -44,6 +49,8 @@ impl Terminal {
 
             view: View::create(),
             executor: CommandExecutor::create(),
+
+            core: Core::new(),
         }
     }
 
@@ -117,6 +124,11 @@ impl Terminal {
 
         // View init stage
         self.view.init();
+        // Init game mechanics
+        self.core.start();
+
+        // Making first draw, to save time before continious drawing in update cycle
+        self.view.make_changes_area(self.core.map_changes());
     }
 
     fn on_close(&self) {
@@ -126,8 +138,8 @@ impl Terminal {
     fn draw_window(&mut self) {
         let cur_time = self.start_time.elapsed().as_millis();
         if cur_time - self.window_last_draw > self.window_draw_timeout {
-            // Time is expired and let's make draw of current frame
-            self.view.draw();
+            self.core.update(); // called update tick of game logic
+            self.view.draw(); // Time is expired and let's make draw of current frame
             self.window_last_draw = cur_time;
         }
     }
@@ -157,7 +169,7 @@ impl Terminal {
             KeyCode::F(_) => todo!(),
             KeyCode::Null => todo!(),
             KeyCode::Esc => todo!(),
-            _ => (),
+            _ => self.execute_cmd(CommandsOpCode::empty_cmd),
         }
     }
 

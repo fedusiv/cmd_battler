@@ -7,6 +7,7 @@ pub enum CommandsOpCode {
     move_cursor_down,
     move_cursor_left,
     move_cursor_right,
+    empty_cmd,
 }
 
 pub struct CommandExecutor {}
@@ -16,6 +17,7 @@ impl CommandExecutor {
         CommandExecutor {}
     }
 
+    #[allow(unused)]
     fn empty_cmd_execution(&self, view: &mut View) {}
 
     fn move_cursor_up(&self, view: &mut View) {

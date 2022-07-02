@@ -1,3 +1,5 @@
+use super::convert_logic;
+use crate::core::map_element::MapElement;
 use crate::terminal::symbols;
 use crate::utils::Vector2;
 use std::collections::LinkedList;
@@ -109,6 +111,21 @@ impl View {
                 Some(self.cursor.last_content.bg),
             );
             self.cursor.position = destination;
+        }
+    }
+
+    // This function provides converting of game logic data inside map to area view in GUI
+    pub fn make_changes_area(&mut self, list: &LinkedList<MapElement>) {
+        for map_element in list.iter() {
+            let pos = map_element.position;
+            // making converting functionality
+            let new_cell = convert_logic::convert_logic_to_gui(map_element);
+            self.area.change_cell_data(
+                pos,
+                Some(new_cell.content),
+                Some(new_cell.fg),
+                Some(new_cell.bg),
+            );
         }
     }
 

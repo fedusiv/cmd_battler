@@ -1,3 +1,4 @@
+pub mod core;
 mod terminal;
 pub mod utils;
 
