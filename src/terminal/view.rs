@@ -21,6 +21,7 @@ pub enum CursorMoves {
 
 pub struct View {
     area: Rect,
+    info_area: Rect,
     cursor: Cursor,
     buffer: Vec<Cell>,
     window_size: Vector2,
@@ -30,12 +31,19 @@ impl View {
     pub fn create() -> View {
         let area = Rect::new(
             parameters::BATTLE_AREA_SIZE,
-            Vector2 { x: 2, y: 2 }, // from where to draw this rect in global coordinates
+            parameters::BATTLE_AREA_START, // from where to draw this rect in global coordinates
             Vector2 { x: 0, y: 0 }, // where will be located first cursor position in logic coordinates
             "Area".to_string(),
         );
+        let info_area = Rect::new(
+            parameters::INFO_AREA_SIZE,
+            parameters::INFO_AREA_START,
+            Vector2 { x: 0, y: 0 },
+            "Info".to_string(),
+        );
         View {
             area,
+            info_area,
             cursor: Cursor::default(),
             buffer: vec![Cell::default(); parameters::WINDOW_SIZE_US],
             window_size: Vector2::default(),
@@ -55,6 +63,7 @@ impl View {
             panic!("No content of cell in view init!");
         }
         self.window_size = parameters::WINDOW_SIZE;
+        self.info_area.visible = true;
     }
 
     // Main function of drawing.
@@ -68,7 +77,14 @@ impl View {
                 cell = Some(c);
             }
         }
-        // todo()! another views
+        if self.info_area.visible {
+            // information field
+            if let Some(c) = self.info_area.content(&position) {
+                if c != element {
+                    cell = Some(c);
+                }
+            }
+        }
         cell
     }
 
