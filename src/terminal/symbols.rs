@@ -1,4 +1,5 @@
-use super::cell::{Cell, Colour};
+use super::cell::Cell;
+use crate::common::colour::Colour;
 
 pub const EMPTY_CELL: Cell = Cell {
     content: ' ',

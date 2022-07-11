@@ -1,4 +1,4 @@
-use crate::utils::Vector2;
+use crate::common::vector2::Vector2;
 
 pub const INPUT_POLLING_TIMEOUT: u64 = 100; // ms
 

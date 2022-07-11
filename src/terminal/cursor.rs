@@ -1,5 +1,5 @@
 use super::cell::Cell;
-use crate::utils::Vector2;
+use crate::common::vector2::Vector2;
 
 pub enum Zones {
     Area,

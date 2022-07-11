@@ -9,13 +9,14 @@ use crate::core::core::Core;
 
 use self::commands::{CommandExecutor, CommandsOpCode};
 use self::view::View;
-use crate::utils::{Vector2, Vector2Int};
+use crate::common::vector2::{Vector2, Vector2Int};
 
 mod backend;
 pub mod cell;
 mod commands;
 mod convert_logic;
 mod cursor;
+mod label;
 mod parameters;
 mod rect;
 mod symbols;
@@ -38,7 +39,7 @@ pub struct Terminal {
 
 impl Terminal {
     pub fn new() -> Terminal {
-        Terminal {
+        let terminal: Terminal = Terminal {
             exit_app: false,
 
             window_draw_timeout: parameters::WINDOW_DRAW_TIME,
@@ -47,11 +48,11 @@ impl Terminal {
 
             terminal_size: Default::default(),
 
-            view: View::create(),
+            view: View::new(),
             executor: CommandExecutor::create(),
-
             core: Core::new(),
-        }
+        };
+        terminal
     }
 
     pub fn run_terminal(&mut self) {
@@ -138,10 +139,19 @@ impl Terminal {
     fn draw_window(&mut self) {
         let cur_time = self.start_time.elapsed().as_millis();
         if cur_time - self.window_last_draw > self.window_draw_timeout {
-            self.core.update(); // called update tick of game logic
+            self.game_core_process();
             self.view.draw(); // Time is expired and let's make draw of current frame
             self.window_last_draw = cur_time;
         }
+    }
+
+    fn game_core_process(&mut self) {
+        let cursor_pos: Vector2 = self.view.cursor_pos();
+        self.core.update();
+        // after that all required game proccess will be done and it can be represetned
+        self.view
+            .get_description_under_cursor(self.core.under_cursor_information(cursor_pos));
+        self.view.make_changes_area(self.core.map_changes()); // making changes after updating core
     }
 
     fn key_process(&mut self, key: KeyEvent) {

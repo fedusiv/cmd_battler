@@ -1,8 +1,10 @@
+use crate::common::vector2::{Vector2, Vector2Int};
 use crate::terminal::cell::Cell;
-use crate::utils::{self, Vector2, Vector2Int};
 
-use super::cell::Colour;
+use super::label::Label;
 use super::symbols;
+use crate::common::colour::Colour;
+use crate::common::description::TextDescription;
 
 #[derive(Clone)]
 pub struct Rect {
@@ -15,6 +17,7 @@ pub struct Rect {
 
     pub data: Vec<Cell>,
     pub logic_positions: Vec<Vec<Vector2>>, // stores the data of local positions related to logic positions
+    pub labels: Vec<Label>,                 // keeps tracks of all created lables in this rect
 }
 
 impl Rect {
@@ -29,6 +32,7 @@ impl Rect {
             visible: false,
             data,
             logic_positions,
+            labels: Vec::new(),
         };
         rect.init_borders();
         rect
@@ -74,7 +78,7 @@ impl Rect {
                 // Name of Rect in Horizontal upper border
                 else if point == (Vector2 { x: 2, y: 0 }) {
                     for c in self.name.chars() {
-                        self.data[id] = utils::create_char_cell(c);
+                        self.data[id] = create_char_cell(c, Colour::White, Colour::Black);
                         x += 1;
                         id += 1;
                     }
@@ -225,4 +229,27 @@ impl Rect {
     pub fn get_cursor_pos(&self) -> Vector2 {
         self.last_cursor_pos
     }
+
+    pub fn create_label(&mut self, point: Vector2, length: u32) {
+        let label = Label::new(point, length);
+        self.labels.push(label);
+    }
+
+    pub fn label_set_text(&mut self, id: u32, text: TextDescription) {
+        let lid = id as usize;
+        // update first information inside label
+        self.labels[lid].set_text(text);
+        // now update information of content in rect
+        let mut start_pos: Vector2 = self.labels[id as usize].position;
+        for i in 0..self.labels[lid].content.len() {
+            let symbol = self.labels[lid].content[i as usize].content;
+            let color = self.labels[lid].content[i as usize].fg;
+            self.change_cell_data(start_pos, Some(symbol), Some(color), None);
+            start_pos.x += 1;
+        }
+    }
+}
+
+fn create_char_cell(c: char, fg: Colour, bg: Colour) -> Cell {
+    Cell { content: c, fg, bg }
 }

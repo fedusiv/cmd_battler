@@ -1,6 +1,7 @@
 use super::map_element::MapElement;
+use crate::common::description::TextDescription;
+use crate::common::vector2::Vector2;
 use crate::core::config;
-use crate::utils::Vector2;
 use std::collections::LinkedList;
 
 pub struct Core {
@@ -40,5 +41,14 @@ impl Core {
 
     pub fn map_changes(&self) -> &LinkedList<MapElement> {
         &self.map_changes
+    }
+
+    fn map_element(&self, position: Vector2) -> MapElement {
+        self.map_content[position.y as usize][position.x as usize]
+    }
+
+    pub fn under_cursor_information(&self, position: Vector2) -> TextDescription {
+        let element = self.map_element(position);
+        element.text_of_ground()
     }
 }

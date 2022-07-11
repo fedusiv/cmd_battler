@@ -1,7 +1,8 @@
 use super::convert_logic;
+use crate::common::description;
+use crate::common::{description::TextDescription, vector2::Vector2};
 use crate::core::map_element::MapElement;
 use crate::terminal::symbols;
-use crate::utils::Vector2;
 use std::collections::LinkedList;
 
 use super::{
@@ -19,6 +20,12 @@ pub enum CursorMoves {
     Right,
 }
 
+enum InfoAreaLabels {
+    GroundDesc,
+    GroundText,
+    InfoAreaLabelsSize,
+}
+
 pub struct View {
     area: Rect,
     info_area: Rect,
@@ -28,7 +35,7 @@ pub struct View {
 }
 
 impl View {
-    pub fn create() -> View {
+    pub fn new() -> View {
         let area = Rect::new(
             parameters::BATTLE_AREA_SIZE,
             parameters::BATTLE_AREA_START, // from where to draw this rect in global coordinates
@@ -63,7 +70,29 @@ impl View {
             panic!("No content of cell in view init!");
         }
         self.window_size = parameters::WINDOW_SIZE;
+        self.init_info_area();
+    }
+
+    fn init_info_area(&mut self) {
         self.info_area.visible = true;
+        self.info_area.set_logic_size(Vector2 {
+            x: parameters::INFO_AREA_SIZE.x - 2,
+            y: parameters::INFO_AREA_SIZE.x - 2
+        });
+        let mut pos = Vector2 { x: 0, y: 0 };
+        for _i in 0..InfoAreaLabels::InfoAreaLabelsSize as u32 {
+            self.info_area
+                .create_label(pos, (self.info_area.size.x - 2) as u32);
+            pos.y += 1;
+        }
+        self.info_area.label_set_text(
+            InfoAreaLabels::GroundDesc as u32,
+            description::GROUND_LABEL_TEXT,
+        );
+    }
+
+    pub fn cursor_pos(&self) -> Vector2 {
+        self.cursor.position
     }
 
     // Main function of drawing.
@@ -143,6 +172,11 @@ impl View {
                 Some(new_cell.bg),
             );
         }
+    }
+
+    pub fn get_description_under_cursor(&mut self, desc: TextDescription) {
+        self.info_area
+            .label_set_text(InfoAreaLabels::GroundText as u32, desc);
     }
 
     // Making draw

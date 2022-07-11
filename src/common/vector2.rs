@@ -1,7 +1,4 @@
-use crate::terminal::cell::Colour;
 use std::ops::{Add, Sub};
-
-use super::terminal::cell::Cell;
 
 pub type Vector2Int = i16;
 
@@ -47,13 +44,5 @@ impl PartialEq for Vector2 {
             return true;
         }
         false
-    }
-}
-
-pub fn create_char_cell(c: char) -> Cell {
-    Cell {
-        content: c,
-        fg: Colour::White,
-        bg: Colour::Black,
     }
 }
